@@ -1,0 +1,40 @@
+{
+  "name": "tryhard-cast",
+  "version": "1.0.0",
+  "description": "Rx wrapper for Google Cast technology",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+    "rx": "^4.1.0"
+  },
+  "devDependencies": {
+    "babel": "^6.5.2",
+    "babel-cli": "^6.22.2",
+    "babel-core": "^6.22.1",
+    "babel-preset-latest": "^6.22.0",
+    "babel-runtime": "^6.22.0",
+    "babel-tape-runner": "^2.0.1",
+    "faucet": "0.0.1",
+    "sinon": "^1.17.7",
+    "standard": "^8.6.0",
+    "tape": "^4.6.3",
+    "tape-promise": "^2.0.1"
+  },
+  "scripts": {
+    "clean": "rm -rf dist",
+    "review": "node_modules/.bin/standard --fix",
+    "test": "babel-tape-runner test/**/*.js | faucet"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Newbourne/tryhard-cast.git"
+  },
+  "author": "Brian Bland",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Newbourne/tryhard-cast/issues"
+  },
+  "homepage": "https://github.com/Newbourne/tryhard-cast#readme"
+}
