@@ -1,31 +1,33 @@
 import Rx from 'rxjs/Rx'
 import RxReceiverObservable from './RxReceiverObservable'
-import SocketObserver from './SocketObserver'
+import RxReceiverObserver from './RxReceiverObserver'
 
 const socketCfg = {
-    appId: null,
-    namespace: null,
-    readyObs: null,
-    senderConnectedObs: null,
-    senderDisconnectedObs: null,
-    standbyChangedObs: null,
-    systemVolumeChangedHandler: null,
-    visibilityChangedHandler: null,
+  appId: null,
+  namespace: null,
+  readyObs: null,
+  senderConnectedObs: null,
+  senderDisconnectedObs: null,
+  standbyChangedObs: null,
+  systemVolumeChangedHandler: null,
+  visibilityChangedHandler: null,
     // DEBUG
     // VERBOSE
     // INFO
     // WARNING
     // ERROR
     // NONE
-    logLevel: 'NONE',
+  logLevel: 'NONE',
     // STRING
     // JSON
     // CUSTOM
-    messageType: 'JSON'
+  messageType: 'JSON'
 }
 
 export default class RxReceiverSubject {
   constructor (config) {
+    config = Object.assign(socketCfg, config)
+
     if (!config.appId) {
       throw new Error('application id required.')
     }
@@ -34,47 +36,47 @@ export default class RxReceiverSubject {
     }
     this.state = { }
     this.state.subject = Rx.Subject.create(
-      new SocketObserver(this.state, config),
-      new SocketObservable(this.state, config)
-    )      
+      new RxReceiverObserver(config, this.state),
+      new RxReceiverObservable(config, this.state)
+    )
   }
-  start => (config) => {
+  start (config) {
     this.state.manager.start(config)
   }
-  stop => () => {
+  stop () {
     this.state.manager.stop()
   }
-  next => (msg) => {
+  next (msg) {
     this.state.messenger.broadcast(msg)
   }
-  send => (senderId, msg) => {
+  send (senderId, msg) {
     this.state.messenger.send(senderId, msg)
   }
-  getApplicationData => () => {
+  getApplicationData () {
     return this.state.manager.getApplicationData()
   }
-  getNamespace => () => {
+  getNamespace () {
     return this.state.manager.getNamespace()
   }
-  getDeviceCapabilities => () => {
+  getDeviceCapabilities () {
     return this.state.manager.getDeviceCapabilities()
   }
-  getStandbyState => () => {
+  getStandbyState () {
     return this.state.manager.getStandbyState()
   }
-  getSystemState => () => {
+  getSystemState () {
     return this.state.manager.getSystemState()
   }
-  getVisibilityState => () => {
+  getVisibilityState () {
     return this.state.manager.getVisibilityState()
   }
-  isSystemReady => () => {
+  isSystemReady () {
     return this.state.manager.isSystemReady()
   }
-  setApplicationState => (statusText) => {
+  setApplicationState (statusText) {
     this.state.manager.setApplicationState(statusText)
   }
-  setInactivityTimeout => (maxInactivity) => {
+  setInactivityTimeout (maxInactivity) {
     this.state.manager.setInactivityTimeout(maxInactivity)
   }
 }

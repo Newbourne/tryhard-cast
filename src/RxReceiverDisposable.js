@@ -1,9 +1,9 @@
 export default class RxReceiverDisposable {
   constructor (
     state,
-    onReadyHandler, 
-    onMessageHandler, 
-    onSenderConnectedHandler, 
+    onReadyHandler,
+    onMessageHandler,
+    onSenderConnectedHandler,
     onSenderDisconnectedHandler,
     onShutdownHandler,
     onStandbyChangedHandler,

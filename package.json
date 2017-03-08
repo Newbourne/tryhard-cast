@@ -1,13 +1,13 @@
 {
   "name": "tryhard-cast",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Rx wrapper for Google Cast technology",
-  "main": "index.js",
+  "main": "src/index.js",
   "directories": {
     "test": "test"
   },
   "dependencies": {
-    "rx": "^4.1.0"
+    "rxjs": "^5.0.0-beta.12"
   },
   "devDependencies": {
     "babel": "^6.5.2",
@@ -25,7 +25,8 @@
   "scripts": {
     "clean": "rm -rf dist",
     "review": "node_modules/.bin/standard --fix",
-    "test": "babel-tape-runner test/**/*.js | faucet"
+    "test": "babel-tape-runner test/**/*.js | faucet",
+    "test-debug": "babel-tape-runner test/**/*.js"
   },
   "repository": {
     "type": "git",

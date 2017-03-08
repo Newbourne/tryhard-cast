@@ -1,101 +1,62 @@
-import Rx from 'rx'
+import Rx from 'rxjs/Rx'
+import RxReceiverObservable from './RxReceiverObservable'
+import RxReceiverObserver from './RxReceiverObserver'
+import { obsFn, errorFn } from './ObsFn'
 
-export default class RxSenderObservable {
-  constructor (applicationId, namespace) {
-    this.applicationId = applicationId
-    this.namespace = namespace
-    this.state = state
+const socketCfg = {
+  appId: null,
+  namespace: null,
+  initObs: null,        // API finished initializing
+  connObs: null,        // for sender to receiver connection status
+  receiverObs: null,    // for chromecast availability
+  closeObs: null,       // for observing manual shutdown
+  sendMessageObs: null, // for monitoring sending messages
+    // DEBUG
+    // VERBOSE
+    // INFO
+    // WARNING
+    // ERROR
+    // NONE
+  logLevel: 'NONE',
+    // STRING
+    // JSON
+    // CUSTOM
+  messageType: 'JSON'
+}
 
-    // Observable
-    return Rx.Observable.create(obs => {
-      var chrome = window.chrome
-      if (!chrome) {
-        obs.error('chrome not detected.')
-        return
-      }
-      var sessionRequest = new chrome.cast.SessionRequest(this.applicationId)
+export default class RxSenderSubject {
+  constructor (config) {
+    config = Object.assign(socketCfg, config)
+    this.config = config
 
-      var onInitSuccessHandler = this.createOnInitSuccess(obs)
-      var onErrorHandler = this.createOnError(obs)
+    if (!config.appId) {
+      throw new Error('application id required.')
+    }
+    if (!config.namespace) {
+      throw new Error('namespace is required.')
+    }
+    this.config = config
+    this.state = { }
+    this.state.subject = Rx.Subject.create(
+      new RxReceiverObserver(config, this.state),
+      new RxReceiverObservable(config, this.state)
+    )
+  }
+  // Not sure if using sendMessageObs is the answer here.
+  // What will/should happen on error? Doesn't the observable close after error?
+  next (message) {
+    var messageObs = this.config.sendMessageObs
+    var state = this.state
 
-      var onSessionUpdateHandler = this.createOnSessionUpdateListener(this.state, obs)
-      var onReceiveMessageHandler = this.createOnReceiveMessage(obs)
-      var onSessionListenerHandler = this.createOnSessionListener(
-        this.state,
-        obs,
-        this.namespace,
-        onSessionUpdateHandler,
-        onReceiveMessageHandler
-      )
-      var onReceiverListenerHandler = this.createOnReceiverMessage(obs)
+    state.session.sendMessage(
+      this.config.namespace,
+      message,
+      messageObs ? messageObs.next('Message sent: ' + message) : null,
+      messageObs ? messageObs.error(errorFn(messageObs)) : null)
+  }
 
-      var apiConfig = new chrome.cast.ApiConfig(
-        sessionRequest,
-        onSessionListenerHandler,
-        onReceiverListenerHandler
-      )
-
-      chrome.cast.initialize(
-        apiConfig,
-        onInitSuccessHandler,
-        onErrorHandler
-      )
-    }).retryWhen(attempts => {
-      return Rx.Observable.range(1, 5)
-        .zip(attempts, function (i) { return i })
-        .flatMap(i => {
-          console.log('Chrome not detected. Will retry in ' + i + ' second(s)')
-          return Rx.Observable.timer(i * 1000)
-        })
-    })
-  }
-  createOnInitSuccess (obs) {
-    return () => {
-      obs.onNext('Init Success')
-    }
-  }
-  createOnMessageSuccess (obs) {
-    return (msg) => {
-      obs.onNext('onSuccess ' + msg)
-    }
-  }
-  createOnError (obs) {
-    return (err) => {
-      obs.onError(err)
-    }
-  }
-  createOnSessionListener (state, obs, namespace, updateListener, receiveSessionMessage) {
-    return (e) => {
-      state.session = e
-      state.session.addUpdateListener(updateListener)
-      state.session.addMessageListener(namespace, receiveSessionMessage)
-      obs.onNext('Connected')
-    }
-  }
-  createOnSessionUpdateListener (state, obs) {
-    return (isAlive) => {
-      if (!isAlive) {
-        state.session = null
-        obs.onCompleted()
-      }
-      if (isAlive) {
-        obs.onNext('CONNECTED')
-        obs.onNext(state.session.sessionId)
-      }
-    }
-  }
-  createOnReceiveMessage (obs) {
-    return (msg) => {
-      obs.onNext(msg)
-    }
-  }
-  createOnReceiverMessage (obs) {
-    return (msg) => {
-      if (msg === 'available') {
-        obs.onNext('AVAILABLE')
-      } else {
-        obs.onNext('NOT AVAILABLE')
-      }
-    }
+  stop () {
+    var state = this.state
+    state.session.stop(obsFn(this.closeObs), errorFn(this.closeObs))
   }
 }

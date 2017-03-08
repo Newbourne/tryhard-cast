@@ -2,15 +2,15 @@ import Rx from 'rxjs/Rx'
 import RxReceiverDisposable from './RxReceiverDisposable'
 import { obsFn, completedFn } from './ObsFn'
 
-let cast = window.cast
-
 export default class RxReceiverObservable {
-  constructor (state, config) {
+  constructor (config, state) {
     this.state = state
 
     return Rx.Observable.create(obs => {
-      if (!cast) {
+      let cast = window.cast
+      if (!!cast == false) {
         obs.error('cast not detected.')
+        return
       }
 
       if (config.logLevel) {
@@ -35,7 +35,8 @@ export default class RxReceiverObservable {
 
       var onMessageHandler = obsFn(obs)
       var onShutdownHandler = completedFn(obs)
-
+      
+      console.log('manager', this.state)
       this.state.manager.addEventListener('onReady', onReadyHandler, false)
       this.state.manager.addEventListener('onSenderConnected', onSenderConnectedHandler, false)
       this.state.manager.addEventListener('onSenderDisconnected', onSenderDisconnectedHandler, false)
@@ -46,10 +47,10 @@ export default class RxReceiverObservable {
       this.state.messenger.addEventListener('onMessage', onMessageHandler, false)
 
       return new RxReceiverDisposable(
-        this.state, 
-        onReadyHandler, 
-        onMessageHandler, 
-        onSenderConnectedHandler, 
+        this.state,
+        onReadyHandler,
+        onMessageHandler,
+        onSenderConnectedHandler,
         onSenderDisconnectedHandler,
         onShutdownHandler,
         onStandbyChangedHandler,
